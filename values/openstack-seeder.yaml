@@ -1,0 +1,16 @@
+# Default values for openstack-seeder-operator.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+imageTag: "v1.10.629b9f5081e2aa6d71ef6bb3748bfd564bfeec4f"
+
+resync: 30m
+
+keystone:
+  password: openstack
+
+sentry:
+  enabled: true
+  dsn: https://89d84086d7b24941bfc7fec7b62a8e5a:b047b144f6444b30b2473433f9bfdf88@sentry.staging.cloud.sap/18
+
+rbac:
+  enabled: false

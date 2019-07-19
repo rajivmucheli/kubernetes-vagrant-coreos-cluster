@@ -1,0 +1,36 @@
+global:
+  dbBackupServicePassword: Dw9QKthZRCUMQUf
+
+# AD/LDAP connection details
+ldapUrl: ldaps://ldap.staging.cloud.sap:636
+ldapUser: CN=monsoon-service,CN=Users,DC=ad,DC=staging,DC=cloud,DC=sap
+ldapPassword: F40abK1avD4S!Gs
+ldapSuffix: DC=ad,DC=staging,DC=cloud,DC=sap
+#ldapUrl: ldaps://dev-ad.mo.sap.corp:636
+#ldapUrl: ldaps://mo-854cbfc36.mo.sap.corp:636
+#ldapUser: CN=monsoon-service,CN=Users,DC=dev-ad,DC=mo,DC=sap,DC=corp
+#ldapPassword: ccRocks2016
+#ldapSuffix: DC=dev-ad,DC=mo,DC=sap,DC=corp
+ldapDriver: cc_ldap
+#ldapUsePool: false
+#ldapUseAuthPool: false
+#ldapDebugLevel: 0
+
+# default domain - service user credentials
+concourseServicePassword: TZdzBse88EhqNZTd
+dockerRegistryServicePassword: secret123!
+imageBuildServicePassword: secret123!
+quayServicePassword: 8iyrA+nQHomXn6avTNjP
+
+# kubernikus domain - service user credentials
+kubernikusAdminPassword: XMkeaBDceZs75N4k
+
+# tempest domain - service user credentials
+tempestAdminPassword: topSecret123
+
+# cc3test domain - users
+cc3testAdminUser: TEST_D021500_TA
+cc3testMemberUser: TEST_D021500_TM
+
+rbac:
+  enabled: false

@@ -1,0 +1,7 @@
+global:
+  tld: local
+  region: cluster
+  imageRegistry: hub.global.cloud.sap
+  imageNamespace: monsoon
+  keystoneNamespace: monsoon3
+  clusterDomain: cluster.local

@@ -1,0 +1,157 @@
+---
+
+kind: Service
+apiVersion: v1
+metadata:
+  name:  kube-ad-auth
+  namespace: kube-system
+  labels:
+    name:  kube-ad-auth
+spec:
+  selector:
+    name:  kube-ad-auth
+  ports:
+  -   name: public
+      port: 23456
+      targetPort: 8888
+
+---
+
+kind: Secret
+apiVersion: v1
+metadata:
+  name: kube-ad-auth-signing
+  namespace: kube-system
+  labels:
+    name: kube-ad-auth-signing
+data:
+  signing.crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUMrakNDQWVLZ0F3SUJBZ0lKQU45aWVRai91L3EvTUEwR0NTcUdTSWIzRFFFQkN3VUFNQkl4RURBT0JnTlYKQkFNTUIydDFZbVV0WTJFd0hoY05NVGd3TmpBMU1EZzBNVEF6V2hjTk1Ua3dOakExTURnME1UQXpXakFYTVJVdwpFd1lEVlFRRERBeHJkV0psTFdGa0xXRjFkR2d3Z2dFaU1BMEdDU3FHU0liM0RRRUJBUVVBQTRJQkR3QXdnZ0VLCkFvSUJBUURJaDBGR3dYc0k0STJiM0hrazlZbXlSRUxCR0NNczZ2bVhiQ3NpNTZ5MTZZbUI0NWt0NWowa0xpankKbGJ0cHN0YzViZ05Ra3ZVTEFVanRONjlWWHJLK01yelk3RStYNW9CRUE1TzFhNmhjQVhMMFdSTFZRZkw4aldpRApZWWR1OVdzdmRLaHdmb25yZDJLdHRuM3FCSUdHUEM5Kys0OUY0d2NKbFRGR2ZyYUI1WC9jdDlMbW12dncyVHlqCmlBOVRtYm9rcVBBSmRlNkFLM0hNSWNTYWsvRzJJcEpvR0JSbzNMRVlldGZ5a3ZyWTBnMnBJbmJvVGZ4WXA0dmkKV1BHY0tRMk0vb0wySFlzQ1l0MVAzVkcrM29EWno3ejg5ZFJXQkp2Ri9WVk1qVkxjTDJOdXRqdUpmS3BsU3E3dAp3d3hMVVl3dVozeHVwSDJwcXRsVFlqUEt6czVmQWdNQkFBR2pUakJNTUFrR0ExVWRFd1FDTUFBd0N3WURWUjBQCkJBUURBZ1hnTURJR0ExVWRFUVFyTUNtQ0VtRjFkR2d1WTJ4MWMzUmxjaTVzYjJOaGJJSVRiRzluYjI0dVkyeDEKYzNSbGNpNXNiMk5oYkRBTkJna3Foa2lHOXcwQkFRc0ZBQU9DQVFFQUwvVitDTmlOV2QzOGVvUWVqK0xGY2YxaApzUFdjMXNqRUUyNy9oVTBoYTNxcTV5S1hQamcyajRsUDJ1RHhWNVBVbzcrcHJoNWJHTDVsQ2l1ZWxoRHMwdDRGCnEwUG5iZ2lBUEdaYVYyQVNTR0w5Y3E4OEVMTElQVm1hZnFGWWJYYjZLNWUwbEQrL3Vra0RCVmF0UFovL05oa2UKQmlVaTdDZ2NocmZxZDQzRVZ3VXladEovU0hFUU9DanNGbTBXdFlUQ3BuUjFML2JsRnlHVHRPTnhXeUhOTUMwOApDajJBZ3JqYUM3M2ttRkhhdko0aGdkVStSRllyd0k2N3ErLzM0SDZjYi8zUTZ5YkxNV1F6TDhNdUJibzdKY3I4CmZNOXU2MU1ROHFDQ29LWFkvQVE4dm9xQXVhdjBwTzU2TWp1QkFEOUp3Tmx3ZTIxSlAwR3lhelRJWHhxTkNBPT0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=
+  signing.key: LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlFb2dJQkFBS0NBUUVBeUlkQlJzRjdDT0NObTl4NUpQV0pza1JDd1JnakxPcjVsMndySXVlc3RlbUpnZU9aCkxlWTlKQzRvOHBXN2FiTFhPVzREVUpMMUN3Rkk3VGV2VlY2eXZqSzgyT3hQbCthQVJBT1R0V3VvWEFGeTlGa1MKMVVIeS9JMW9nMkdIYnZWckwzU29jSDZKNjNkaXJiWjk2Z1NCaGp3dmZ2dVBSZU1IQ1pVeFJuNjJnZVYvM0xmUwo1cHI3OE5rOG80Z1BVNW02Sktqd0NYWHVnQ3R4ekNIRW1wUHh0aUtTYUJnVWFOeXhHSHJYOHBMNjJOSU5xU0oyCjZFMzhXS2VMNGxqeG5Da05qUDZDOWgyTEFtTGRUOTFSdnQ2QTJjKzgvUFhVVmdTYnhmMVZUSTFTM0M5amJyWTcKaVh5cVpVcXU3Y01NUzFHTUxtZDhicVI5cWFyWlUySXp5czdPWHdJREFRQUJBb0lCQUhMR2I4ZFc0TndRNHh5dAowYTBrMk41dkVhSkI5WWcxS2d6UWZkUXB0SUllbkhUNjEyY2RIQ3ZFTysyMVpDSzRtVldtc1VFQ0REMXpTOUZ6CkNPa2RIY09kZU5mVVVpNUlZV3dNZkJQZi9lcERiZytMbUNyMTUyVkVidWliL3crMGF0Z3J0bWxGRkIzeEpFcjMKWkJSNDVjWDJWdDBna1QzWUZ1UVdQN0R3di9lU1ovMXBhSlB3UElQOGxEN1FqQWZ6WXkvcjVVSG5XNW1CRjNrOApsNGdzTVVvcEY4SDhlU25zZ1VZVTJadFJKbUs0Tk1tWWRoNjk3b1NsWCtEUk9DaWVmQWZRY2RUKytNYU43ZmV1Cm14eG1uOWFjQ0R4TzNoKzYxUW5LZWc0WTc1djY2bmZ2bHZtNndWYzNNSk9ZZ09ydU1VQ0FBcVhSZmg5d2U0OG0KZWlKNWRQRUNnWUVBNVNiYU1EMDhZeWZMVzUyVlRTMDVPQXNrWEkrU2w3eGt2bDcyRThhcFNKdGVLTVNiU2pNRwpFb1hQL01BTmlMYlUydDJZUUpZeE1zV2kzaEJnL3Q4dkl2Q1k3WnZJQ3AzdkFRbzRMcDlpRHMvMzQrQmFPYkZJCmtnN3Q1d2NVOEJFbEZnTlJjSDhpTm1qc3pxdDkxMnBjWmR3d2h3L3o5cU9ibFd6d3MxeGw4ZmNDZ1lFQTRBWGcKR3lLUjdBbTEzNVNlaXdmUU15RWV0M3dEWFJlWGpLYzl4VlpuOXc5dmlPd2U3Q1BMMUFwSVQybldPejR0Zmp4OApoRndDQXpEazI5dXFiVTl0M1BJbS9YQ01zM054Q2MxU2d5eGI5eHFxdGZnZldlMk4wcW0vcUlYVmIzWFVxaEM2ClI0d2xpbnluTTUzbDBsQmdWK3pISkdTYkI3ZUNxNXA4RHJnVDdOa0NnWUFOelFBNUJZY2NoYW9HczMvcGJQN1UKTkQrVlg0UTVwVHdBQnlJVTROTVRMMkJGWGtubjl4aTNodDJXNEU0d1hLcUhIKzlxZkdFc0tLRDlkTWtTc0loYgpOMWhPZnlKV0dWcnFtaDMyR04xRC9SeDEyZTQxS1Vzd21MdVZQV1R5YkdYcVpIckVKclA5eU9YeU1IdmN2R2dpCkxsZXgyckVidXBERk9CRnJDL2FMMHdLQmdGRmJzT1VKN0FiV0MvZ3o2RlJEdFNnc2VoUlc5SDNGaUtOclJYSzYKaTYxZExMdUVUVUtqU1c0cmdkRmRkWkUwWnA4MjVsM0hjRytxUFNOZnBvaG1WVmJ0bHAxcVY1OEFhT2dQYWt6NwpPamNHdDBLNDV1SG85UjJ4eWtvd3VLL3ZFaG5sVTFHU296dWxRNi9xUTBIYk1QSWRxc0ViekhYRC9xL0Z2aEkyClpmNFpBb0dBV2hscUpESGlxTTdwNG9ncFVyUjAxNkxSa0ZLYTBBcW05K2ZxbzZ4RkZNenVCRVM1UWZFZGx3R0MKcytnZERyaTN5TmZFVHZqbGlGSHZ1WWlUblYwbG9JNkRiVmgwUzZFN1VXRklSVnZBeDlrck1wN1JWb3RIZjA1KwpCdWY0UklQN0ZjRHpWcXlmRzVtK1BMaVZ5SHBhcVBweTlQT3NINTROWGJzWEE0eENoVVU9Ci0tLS0tRU5EIFJTQSBQUklWQVRFIEtFWS0tLS0tCg==
+
+---
+
+kind: Secret
+apiVersion: v1
+metadata:
+  name: kube-ad-auth-tls
+  namespace: kube-system
+  labels:
+    name: kube-ad-auth-tls
+data:
+  tls.crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUZDRENDQXZDZ0F3SUJBZ0lKQUxhNVhkWkJQN1JuTUEwR0NTcUdTSWIzRFFFQkN3VUFNQkl4RURBT0JnTlYKQkFNTUIydDFZbVV0WTJFd0hoY05NVGd3TmpBMk1UQXhNREkyV2hjTk1Ua3dOakEyTVRBeE1ESTJXakFsTVNNdwpJUVlEVlFRRERCcHJkV0psTFdGa0xXRjFkR2d1WTJ4MWMzUmxjaTVzYjJOaGJEQ0NBaUl3RFFZSktvWklodmNOCkFRRUJCUUFEZ2dJUEFEQ0NBZ29DZ2dJQkFOSTFucHpaL0ljK3ZUa25TZkkxb3FvYWFxMmoxekc3cnYvQ3U3ZTkKQk5HWVNweStIbUIzL2NYdWR3bTR1Y2lRckV2R0VYR2U0cUs3ZHlUTEJMcXJVZXJYSWJYVGJwTlpIRy9jNTgxagphZ0Rkdk82SmtKSHAxWmpTSG01eGlGejBUeWlHcmxBa2pqekFUMFFkYTNrMUFKNlRoVFJzVXZBNGRJeDJmc28xCmRNUlE1bHdHS3h2dW9ob21XTithaUhtM2NMWEVHNWpoSW1xdGlocktnbm51MWt5NjBrT3g5RGRFU3dVV3hzR1gKVVA2cGF0OGFsT1ZSMnFpMUl3ajI2aThLVWk1aDZpZkNoYnh2Y2N6N2dyQnN3OTE0YXlCSTI3Y2pIcXBPRUI1VgphVDFWL3MvYjRVZ2tBNSt3R0w5R1c4L3Q5bmpUYllZNGwwTVRPdHp4TjNLdk5oc29jSFgwNmpoZWVROGtVRksyCklKUEZEcWxWNzRWZEVoSlduc3ZyYnZPZUVjRVJzTWNKQ0pKRzVoK3gxRy9XRHRic3dxLy92anBVSGJpUUJPQXEKV292WVpGOXJlZUxoZE5heXVGdTBONjk5VmpMN3NuUU9XUmFCNDBkc0ZHTDFCOVdwUjN5eHg3aklHdEJ3RnZ3Mwpqa1dGNzNwaXlsUE5nNzZSUUl4OUc5TXFXaEJITnlkZ2haeXNFWS9HZjQ2VERtQ2RjZnVoQmF2SGFqU09tZE5aCmhxRG8xSXFDN01aWWVDdjNVeHM2ZFVsemMwQTE0a2RhUVVuVXJaZkUrbGhJMkRicnIzUUtmOXNoWTFtTXprcjIKQmllMGFQZ2duQXZYWGdDdmhGNG9OZERuTlFnRm93REtXVHhYdmVOTC9BWlVOVVNhdFFUWXdJQ3M4Skpnc04ycAo3SnZUQWdNQkFBR2pUakJNTUFrR0ExVWRFd1FDTUFBd0N3WURWUjBQQkFRREFnWGdNRElHQTFVZEVRUXJNQ21DCkVtRjFkR2d1WTJ4MWMzUmxjaTVzYjJOaGJJSVRiRzluYjI0dVkyeDFjM1JsY2k1c2IyTmhiREFOQmdrcWhraUcKOXcwQkFRc0ZBQU9DQWdFQVZJNDV6K2lmTTlQTm5vMGc2MkpZMlFqRXY1K2lnZ2RKaUFyanRVTXd4dDhCYTZReApwR2hKTnJQV2kzdDRIQTRNaWx6RGFQODhXaVJYZjlKaEpwNFZpVi9FVEtmQlVPWmJrMk1WNVFPK1JDcjBXUUFhCjhCMU84RFppMjZHZnZhc3ZWZk1FUHA5TEtRN055TjRxaTZHSDk0UGg1cTBwVVc4SXpmb3ZPc25hZEpGNU1RUGUKY0NxdjhWY3BaVjEwWW9yK2VWdW9QNVNIenhBYWNyb29wcXYxV1cwYkxaczBqRG14Mm9jbXNYa3RNRWNZeVRxUgo4dDFYOVVwRzhJemVMdzB0cndoT2lpTWZ0djA0UGZhZUJGVEZNN202QmUzY1Nvc2grRVVwODhiRTMrOUNUNHZKCnR6c1J5ZDJXVmdlNGZ6dExNdkhYczFEdUROTmN6Ty8zdFVJaWpCWGZYRUhxNkNZS1AvYW5PcE03dTllL0hzVDIKb2RlNEllUWNlSEFHU0IyNUtZdkozalowVEcrd0M2dnRMM2hjZElMVGJnWHN2VlVmcjRjNVgxR1V2TDFlOUIzegp3ekVKVHcxY2k1MHBZTms3bHFUckdPbkdWRW1ZOFI0d0FWbVFpUlExenN3VWtsQlhONWFndktCVUxUenRxYlpvCmFyRGpqNXpKblV6MmswdWs5T05UdlJJVWFOWFVxZ2RxZUw2UERuMWtrVHhGVFFyVzlhRk1jTmZFVUhMWnEyUXcKbTJWakN3azFzOUNic0trT29mWXczWHBhWXVSaWhPSHQzMEFvUFIyS0NoTTNZYk1UOVIwSStFcHlPUWlGT0dDdAoyd0kzRXpxNnpmM0VVb0tzWGJaYXh6RGdROHZCTFpvOWo2ZWdKMUp2emlnZkxtVHZrdTk0TktWMSszZz0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=
+  tls.key: LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlKS1FJQkFBS0NBZ0VBMGpXZW5ObjhoejY5T1NkSjhqV2lxaHBxcmFQWE1idXUvOEs3dDcwRTBaaEtuTDRlCllIZjl4ZTUzQ2JpNXlKQ3NTOFlSY1o3aW9ydDNKTXNFdXF0UjZ0Y2h0ZE51azFrY2I5em56V05xQU4yODdvbVEKa2VuVm1OSWVibkdJWFBSUEtJYXVVQ1NPUE1CUFJCMXJlVFVBbnBPRk5HeFM4RGgwakhaK3lqVjB4RkRtWEFZcgpHKzZpR2laWTM1cUllYmR3dGNRYm1PRWlhcTJLR3NxQ2VlN1dUTHJTUTdIME4wUkxCUmJHd1pkUS9xbHEzeHFVCjVWSGFxTFVqQ1BicUx3cFNMbUhxSjhLRnZHOXh6UHVDc0d6RDNYaHJJRWpidHlNZXFrNFFIbFZwUFZYK3o5dmgKU0NRRG43QVl2MFpieiszMmVOTnRoamlYUXhNNjNQRTNjcTgyR3lod2RmVHFPRjU1RHlSUVVyWWdrOFVPcVZYdgpoVjBTRWxhZXkrdHU4NTRSd1JHd3h3a0lra2JtSDdIVWI5WU8xdXpDci8rK09sUWR1SkFFNENwYWk5aGtYMnQ1CjR1RjAxcks0VzdRM3IzMVdNdnV5ZEE1WkZvSGpSMndVWXZVSDFhbEhmTEhIdU1nYTBIQVcvRGVPUllYdmVtTEsKVTgyRHZwRkFqSDBiMHlwYUVFYzNKMkNGbkt3Umo4Wi9qcE1PWUoxeCs2RUZxOGRxTkk2WjAxbUdvT2pVaW9Mcwp4bGg0Sy9kVEd6cDFTWE56UURYaVIxcEJTZFN0bDhUNldFallOdXV2ZEFwLzJ5RmpXWXpPU3ZZR0o3Um8rQ0NjCkM5ZGVBSytFWGlnMTBPYzFDQVdqQU1wWlBGZTk0MHY4QmxRMVJKcTFCTmpBZ0t6d2ttQ3czYW5zbTlNQ0F3RUEKQVFLQ0FnRUEwWVhtZWZzQkxTRUk1SzNYazllSU1qcXdlRERscnNtZkRZamhLS3Y3NEpvR1RLTm5qY29zSlp5aQpCQXVmQ2wzQmpxbDIrNlJkeTh4RlhtUUphN0tWclJrUG5iZUg4TkNTZXFGYVh5c25Ib1BsN0hFcnEzVENsVmRpClE3MWdLUjdPdzlzeVplbDU2TzNhVkU5cXIxNTRKcGR0M3luVnBXRHdNbzF0cFVtUkFKaU9jODBtTE9vM293N3oKNkxTVU1aWDVmd05nYW9xRWpvWTVNS2tIVWxnUVBGeStkZ0VySmVjcFM0SS9TL2p5SDFOb2xjWmVBUkVNZkxwSAptSWpjTlZUNVF3Z1BwOS9KQTJDbHNxWkN4bTB5OFU0MG9QSmVKZldZZkRIZytRc3pJWkxVc0FRL1VYT3NOUUFHCk9xajduSTVZN0dmNU5CNjJEb0pkV3BvSUpZU2t6TEJVcUNFTkRBRUIvZ0w3WlEvVm1JdlBmR01LU3ZuVkxrenAKWlFPMmJpSWJROFdXcElqdzRaRXNUS3FGdTZSb3NIdDdadXlyZWdJT3lHQmRGRGIzZEdpRThNU0o3dThBYnRKegpIOXZBYUxKWkJkemczRURZbTVMdXAvLzZWSHkyd2t6QmN1WnJQcEQ0NWx4YVRFVzFXVEJqTXF1VkN3WUlMamwyCkx1SSsvUGdVaSsyTm1xOStFUEpFMTFyRkk3NHphdHN6WWlERDZaM3ZQUFF2RnNWUXJtWm01UWp6TlZMZWlER2MKSUM1WVM3ajhyWG91czhwd01aVEN4NlRBazlJNTYxempoRHdJTkU0T05id0VIU0tTUThZZWZvYjloY0ZmK0YzTQpOOWVtdlY1NFlpcjNibkVtZUhxbThEbjZ4Q3U0MDBYM3N3b0YyZkFxVDlUY2RDK1c5ZWtDZ2dFQkFPLzRzN2tJCmRFdk9iY2loVWlQdlJwREFBU3JHYThOdEVoY3lucEdrR04vYlZLUkd5SWpuUDJ0SVIwc1FqZWVrK3dVNkE4QmsKSHFhb2JqTCtZUzhnZmE2a2g2Y1ZLZW8xcjM4eU1tQkpIMWhMYm9BRVU4SjJ0cHJJUVdXdlVROXBZekthQ1ZXZwppd3MyQ2J3ZFovaXR4YmN6emJ0Y0tOdnNuQ3BiYUVoNStOeWlNa0RpMWxXc0xRWDZPUDZYYlBnQVZyemtOd09VCjNzN1JPYnVITDZSSVY3b3VHZGk2ZjBCQXd0cTZvaDVxZE84NlZKSTlYMlNOTStteVFTUnJMNG15ckdoakdDYUYKREJabzNVekJkeEtpcnVHZytoRC93OGlEc2Z6emtwTDVaS2NMa2UrNm9jcjkxKzNLREFxYlJlT203bUJMVTk0eAp1SmRFUzk5OUx4aWFDYlVDZ2dFQkFPQkFBMlJqU3NteTdEMERFM3F5Ri91ZWRWNWVCcDY2RXFXamgzcXN4TjE1CkNQalBqK0tDdzJ3NFN4RlphaTZpOW9hREVDeHI5Tm1lUGdDWUlwUk12MWN4VGVJdzBFMjZ2alZJcmQxVW5adDgKbVB1VjB2SFJrNEdBUVZJWXVlbGVVaGc3SHBPK1NYckNTS3ZjS3ladGlVSGNFNDVFaEs4dXJUdkQyU2pER3NGRwpmN0M5a21FZGRjN2hmVnBqZzhCZjdmUzBTMWRqZVlCTkNMODhGejMzbDZYYVUyWUFTenVVK3ViQlcxWE1hSU1UCmtSaHk2V1BBcWwyS1N5cDlzNlhwempqVGhEajlHWnpEUklSejVIMkVUODFFSXJTZGhWZnlaZ0F2eXp3VHFFL3MKMHY3Y21NcmN6WFU2em13Y1VGak5rOW5rYVJRREVlRU9Qd1hOdWJDSVpHY0NnZ0VBRk1USmlUSWFIcFYzR3U0YgpWZERYb3A5N2VtQkI0MkFGT016QXZJb2ZQUUNXaXNFMWllTzVzV2RJQkU4aWVQSG1aOFZsbmJrTWpnLzF1YVFhCmRTR3l2dkt1YXQrQ0NTc3NUUzNpL2tKVjNDWnJJZGsrQm82UHIwVzFvejlSSEt4YVVYN1RYLzNOQ3VOYVpGV0gKTWhhWURnc0Z1emwycjlJQ2tnZm5OcDZYMDBDV2FOYzVCYUVwSkdOTG0zMHZpU2MrV29yRjJDR0NSeFFFa3g1WQpHVGZKbit0dGdUeGkxd1REMkhwZW5aTkpHNHRJMW45SlNrS09RNk9SejcwWEdDdkdrQ0pEYk5JSEFjbUJuYXNBCnl6UVpQcDNZQnJDY0dUYU1xUC9McDd5OTRWYzNBakI4NER5bis0U0pGa0hxQXBIbi81MkZYSzJnOURhTStvS3oKR01YOElRS0NBUUVBd1FRNEp6c1RqMEpTOWp6a2tsSWlOSEJ5ZzNRWTdKd3FHcW9EbllLQnZFTkdocXBaSlZUNgpFZmJ1SGhQQlFqMEFSazBmS2EwT1JoVmZOckc3NmJ1WllkcE5PQ2hkMHRtdWlEeHpjak0zcVRKNGx1dWhjb1M2Ckd0Z2k0Ui9wUFVYekVXb3BhbTk1M1pER2JpNkdjWUFNaVVSOURKSkxSbUc5dDloZDNTajVxV3dkMGltSmljK0sKckRRSDZqb0htQmk1djB0RUlnYTcrTVBWaUl5WFVMNEFxRCtnVXdaanV2Z0RjWVR5TVlwTVZxNEwwR2h3SEcwago5bmxuTXo2WTEzREVFTU4yWm5ycmhiUEpFTnlUeWJtTjJwY1A3RGc5SXJMQU90N29abUJoR2RJMDFpdFgxQnh6Ck43a1RIWmpOUzNJL0ZXZjFUY1ZLcVZUU3lCTUlCanVQZHdLQ0FRQmtDN0F0WXJYZTBzNUJZSmJYbkgzdkd4ckQKYkpUVHB1R2FNVnQwUzdROGVIYjhyNXplZFZuZ1dxTDFYOVlLUmlwUzdFd3k3Mkw3YkRnWlBYZzIxZThmM2tJVwp4Z3VpcHM0TUNSU1hBOUdLQi9jbGdESThHR1NuSTkzQVlldTVWbkNRb1daUFdHb25SNllhb0VrTG5ML2lMOE9JCnphayt6SDBPaDRLR256RnNSSGgwR0R4N09FcHJBeGI4eGo0N3RhM0pyeDJhYWxRSjJBUXRqd09vbjM5V2JwNmYKS3BuSzZSN2UvelVBWDROVXRiY24zY1gwY3NnUG1scXpkZzhySkIxU3cxMFVwQUVxVmNYTmx6bEMwMmVNVVZLUgpJR3JyL1JML2dyc3NJN0VKTksrRDdXbVlablNTK1puVWZhNlZwclZUeE8vTGlld3p3Z1VxMGZZV2ZYcGwKLS0tLS1FTkQgUlNBIFBSSVZBVEUgS0VZLS0tLS0K
+
+---
+
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: kube-ad-auth
+spec:
+  tls:
+    - secretName: kube-ad-auth-tls
+      hosts: [logon.cluster.local]
+  rules:
+    - host: logon.cluster.local
+      http:
+        paths:
+        - path: /authenticate
+          backend:
+            serviceName: kube-ad-auth
+            servicePort: 23456
+
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: kube-ad-auth
+  namespace: kube-system
+
+---
+
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: kube-ad-auth
+  namespace: kube-system
+spec:
+  selector:
+    matchLabels:
+      name: kube-ad-auth
+  template:
+    metadata:
+      labels:
+        name: kube-ad-auth
+      annotations:
+        scheduler.alpha.kubernetes.io/critical-pod: ""
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8888"
+        #prometheus.io/scheme: https
+    spec:
+      serviceAccountName: kube-ad-auth
+      hostNetwork: true
+      containers:
+      - name: kube-ad-auth
+        image: "hub.global.cloud.sap/monsoon/kube-ad-auth:latest"
+        args:
+        - kube-ad-auth
+        - server
+        - --alsologtostderr=true
+        - --logtostderr
+        - --ldap-skip-tls-verify
+        - --ldap-host=ldap.staging.cloud.sap
+        - --ldap-port=636
+        - --ldap-user-base-dn=OU=Identities,DC=ad,DC=staging,DC=cloud,DC=sap
+        - --ldap-user-attribute=cn
+        - --ldap-bind-dn=CN=cp-auth-service,CN=Users,DC=ad,DC=staging,DC=cloud,DC=sap
+        - --ldap-bind-password=KDrfWg92xX28NuvB
+        - --ldap-access-filter=(memberOf=CN=CP_CONV_K8S_USERS,OU=Permissions,OU=CCloud,DC=ad,DC=staging,DC=cloud,DC=sap)
+        - --ldap-group-mapping="CN=CP_CONV_K8S_USERS,OU=Permissions,OU=CCloud,DC=ad,DC=staging,DC=cloud,DC=sap:viewers"
+        - --ldap-group-mapping="CN=CP_CONV_K8S_ADMINS,OU=Permissions,OU=CCloud,DC=ad,DC=staging,DC=cloud,DC=sap:admins"
+        - --ldap-group-mapping="CN=CP_CONV_K8S_CLUSTER_ADMINS,OU=Permissions,OU=CCloud,DC=ad,DC=staging,DC=cloud,DC=sap:cluster-admins"
+        - --server-port=8888
+        #- --tls-enabled=true
+        #- --tls-cert-file=/etc/kubernetes/kube-ad-auth/kube-ad-auth.pem
+        #- --tls-private-key-file=/etc/kubernetes/kube-ad-auth/kube-ad-auth-key.pem
+        - --kubeconfig-pregenerated=true
+        - --token-signing-certificate=/etc/kubernetes/kube-ad-auth/signing/signing.crt
+        - --token-signing-private-key=/etc/kubernetes/kube-ad-auth/signing/signing.key
+        - --v=3
+        ports:
+        - containerPort: 8888
+        resources:
+          limits:
+            cpu: 100m
+            memory: 150Mi
+          requests:
+            cpu: 50m
+            memory: 90Mi
+        volumeMounts:
+        - mountPath: /etc/kubernetes/ssl
+          name: etc-kubernetes-ssl
+          readOnly: true
+        - name: kube-ad-auth
+          mountPath: /etc/kubernetes/kube-ad-auth/
+        - name: kube-ad-auth-signing
+          mountPath: /etc/kubernetes/kube-ad-auth/signing
+          readOnly: true
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8888
+            scheme: HTTP
+          initialDelaySeconds: 10
+          periodSeconds: 10
+      volumes:
+      - name: etc-kubernetes-ssl
+        hostPath:
+          path: /etc/kubernetes/ssl
+      - name: kube-ad-auth
+        hostPath:
+          path: /etc/kubernetes/kube-ad-auth/
+      - name: kube-ad-auth-signing
+        secret:
+          secretName: kube-ad-auth-signing
+          defaultMode: 0555
+

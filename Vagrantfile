@@ -121,7 +121,18 @@ DNS_DOMAIN = ENV["DNS_DOMAIN"] || "cluster.local"
 
 SERIAL_LOGGING = (ENV["SERIAL_LOGGING"].to_s.downcase == "true")
 GUI = (ENV["GUI"].to_s.downcase == "true")
-USE_KUBE_UI = (ENV["USE_KUBE_UI"].to_s.downcase == "true") || false
+
+USE_KUBE_UI = (ENV["USE_KUBE_UI"].to_s.downcase == "true") || true
+
+USE_INGRESS = ENV["USE_INGRESS"] || true
+
+USE_PROMETHEUS = ENV["USE_PROMETHEUS"] || false
+
+USE_HELM = ENV["USE_HELM"] || true
+
+USE_KUBE_AD = ENV["USE_KUBE_AD"] || false
+
+USE_DEX = ENV["USE_DEX"] || false
 
 BOX_TIMEOUT_COUNT = (ENV["BOX_TIMEOUT_COUNT"] || 50).to_i
 
@@ -343,6 +354,75 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
             else
               system "kubectl create -f temp/coredns-deployment.yaml"
             end
+          end
+
+          if USE_INGRESS
+              info "Configuring Kubernetes Ingress..."
+
+              # Replace __MASTER_IP__ in ingress.yaml.tmpl with the value of MASTER_IP
+              ingressTmpl = File.read("#{__dir__}/plugins/ingress/ingress.yaml.tmpl")
+              ingressTmpl = ingressTmpl.gsub("__MASTER_IP__", MASTER_IP)
+              File.open("#{__dir__}/temp/ingress.yaml", "wb") do |f|
+                f.write(ingressTmpl)
+              end
+
+              if OS.windows?
+                run_remote "/opt/bin/kubectl apply -f /home/core/ingress.yaml"
+                if AUTHORIZATION_MODE == "RBAC"
+                  run_remote "/opt/bin/kubectl apply -f /home/core/ingress-rbac.yaml"
+                end
+              else
+                system "kubectl apply -f temp/ingress.yaml"
+                if AUTHORIZATION_MODE == "RBAC"
+                  system "kubectl apply -f plugins/ingress/ingress-rbac.yaml"
+                end
+              end
+          end
+
+          if USE_HELM
+            info "Configuring Kubernetes helm..."
+            if AUTHORIZATION_MODE == "RBAC"
+              system "kubectl apply -f plugins/helm/helm-rbac.yaml"
+              system "helm init --service-account tiller"
+            else
+              system "helm init"
+            end
+          end
+
+          if USE_KUBE_AD
+            info "Configuring Kubernetes AD Authentication..."
+            if AUTHORIZATION_MODE == "RBAC"
+              system "kubectl apply -f plugins/kube-ad-auth/kube-ad-auth-rbac.yaml"
+            end
+            system "kubectl apply -f plugins/kube-ad-auth/kube-ad-auth.yaml"
+          end
+
+          if USE_DEX
+            info "Configuring DEX Authentication..."
+            system "kubectl apply -f plugins/dex/dex.yaml"
+          end
+
+          if USE_PROMETHEUS
+              info "Configuring Prometheus..."
+
+              # Replace __MASTER_IP__ in prometheus.yaml.tmpl with the value of MASTER_IP
+              prometheusTmpl = File.read("#{__dir__}/plugins/prometheus/prometheus.yaml.tmpl")
+              prometheusTmpl = prometheusTmpl.gsub("__MASTER_IP__", MASTER_IP)
+              File.open("#{__dir__}/temp/prometheus.yaml", "wb") do |f|
+                f.write(prometheusTmpl)
+              end
+
+              if OS.windows?
+                run_remote "/opt/bin/kubectl apply -f /home/core/prometheus.yaml"
+                if AUTHORIZATION_MODE == "RBAC"
+                  run_remote "/opt/bin/kubectl apply -f /home/core/prometheus-rbac.yaml"
+                end
+              else
+                system "kubectl apply -f temp/prometheus.yaml"
+                if AUTHORIZATION_MODE == "RBAC"
+                  system "kubectl apply -f plugins/prometheus/prometheus-rbac.yaml"
+                end
+              end
           end
 
           if USE_KUBE_UI

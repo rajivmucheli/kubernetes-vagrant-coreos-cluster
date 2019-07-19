@@ -1,0 +1,270 @@
+image: hub.global.cloud.sap/monsoon/dex
+imageTag: "latest"
+
+rbac:
+  enabled: false
+replicas: 1
+
+ingress:
+  enabled: true
+  vice-resident: false
+  host: dex.cluster.local
+
+  ca: |
+    -----BEGIN CERTIFICATE-----
+    MIIB+jCCAWOgAwIBAgIEAQAAADANBgkqhkiG9w0BAQUFADAvMQswCQYDVQQGEwJE
+    RTEPMA0GA1UEChMGU0FQLUFHMQ8wDQYDVQQDFAZTU09fQ0EwHhcNOTgwNTA0MTI1
+    OTMzWhcNMjMwODMxMTIwMDAwWjAvMQswCQYDVQQGEwJERTEPMA0GA1UEChMGU0FQ
+    LUFHMQ8wDQYDVQQDFAZTU09fQ0EwgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGB
+    APy5r2Ns7e13CeTfbNgC+eQ2ZrQ3/KmuY7kzQrRcnMnm3oZ6eEYvBozjBQMiYtnw
+    SMm9vhbINAM+6Tq2/8xaTFaSMCsN4HnXjC/emjhjrX2C6GZRpB0pxieajLWJ/8vj
+    eRlmBsc7uoAxgXgVtkg7U1ihb2wpEoneoiP7cIBCXJoxAgMBAAGjIzAhMA8GA1Ud
+    EwEB/wQFMAMBAf8wDgYDVR0PAQH/BAQDAgH2MA0GCSqGSIb3DQEBBQUAA4GBAHFp
+    8soQSqAnOJ1AlfHjDdahyIzaeYtC+Sjjhm1EcJF9wR+VONnOpPDlsXtyMKHcrNe9
+    roUSxq0fYeljalisxSIzWHMaVOXr1aXxOk0Z8XmG7Uud7LyTPwMp4YTof4d6xxTg
+    vrEcgtBVIuzM+sVEp7RRM6Y+fL9u+69krtndZ8Ft
+    -----END CERTIFICATE-----
+
+  tls_crt: |
+    -----BEGIN CERTIFICATE-----
+    MIIEIDCCAwgCCQCZVRXiuaCOijANBgkqhkiG9w0BAQsFADAVMRMwEQYDVQQDEwpt
+    aW5pa3ViZUNBMB4XDTE5MDYxNzE1MTYyNVoXDTIwMDYxNjE1MTYyNVowgY4xCzAJ
+    BgNVBAYTAkRFMRswGQYDVQQIDBJCYWRlbi1XdWVydHRlbWJlcmcxETAPBgNVBAcM
+    CFdhbGxkb3JmMQ8wDQYDVQQKDAZTQVAgU0UxIjAgBgNVBAsMGUluZnJhc3RydWN0
+    dXJlIEF1dG9tYXRpb24xGjAYBgNVBAMMEWRleC5jbHVzdGVyLmxvY2FsMIICIjAN
+    BgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAr/G9zs8i17RJFNBK9T0Kpq0pTEdl
+    MTMXtNQIxcYxx6uUIrhpEyECK3D3V4Q529Cm0xPDv5yzXyNTEPi7VJbRyZfeZOmb
+    HghkeehPF/O83SOMXEbVY1Ssx0I9Jdxbh1P7CmqZPA+Y+jfm7un7B/q0cKp7Lvwb
+    d0Y3hWW+au78+VzoT0LRZ53TjZWdoMiXXsEyNDq3/Ah64Vf+isGKwU69X4EeEZ4x
+    KK5buj56N4dYHk05E9zolmWoeQf4guxuedBY92kd6+9GiqfPJUBf4vLJ+2E17NxE
+    xEOyRNBa+NzWBNC3v9KHLWVL8DMvcV0msaOrcLB7suOIDd3VAAmSfw1M6W5QwwqA
+    iThEnPNmpQXmsgGB3CvKjr3gpDkiVyG1ijVJan3PKBtCP0goaZjw4d62fZICc+jd
+    4OPrnqNWbEDk0YkIJ4bsWXC+cTg+pVrdLzaXDxvSS8BHHdCycu4n7j2KnJ+bFWJQ
+    OpFvADe3cFQ0KMAdTR44ixljMlqbSJpUQtA5XYra7QvUhafKaCv+wx1O1//n3QTR
+    vg36ZKbNtSZTisByzqGu/k2Xgm2W/zOY4qzp6xULJkM8mQHkRxiwtaDaLOOuAt8F
+    grfribR/sS7mnsFZHjL/D5RvuRyricMTYXNmnYIfLaPcI6PnE3+53DoWuDwTCV89
+    OAO5dsTBVdLD4ncCAwEAATANBgkqhkiG9w0BAQsFAAOCAQEAYaA/ALgwErWQbL5r
+    z4fAC/13wTJgx1QF94nit8RZBbzkAv33/8FsqUKYXJuVrwd4f8keawoATm9H++/1
+    vT3Af/5VXOekbDS98bsE1OwrAOEGWwAumAmrDv4ES9QDTylwHkDPIG67ouO9w/Jl
+    b7VHjyXL3v/kcbwnWiPz7OLo4amiqhMWYDKQBCr47QxVBmNvVWc6GNGf/R3KvxDD
+    tUIMf/R+PyPymqGHAHTPca08tXsMlCQkofjky0OjGjKF2KRX/27CrhylUOJDW3ak
+    nBPZYPXGWVnSCXUel/jrKd+7KGHiS509/Ka6kCeDXcIEwUOM6oaDLS6cYH2nnbPG
+    qNLu/A==
+    -----END CERTIFICATE-----
+
+  tls_key: |
+    -----BEGIN RSA PRIVATE KEY-----
+    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
+    -----END RSA PRIVATE KEY-----
+
+extraCAs:
+  sapnetca_g2.pem: |
+      -----BEGIN CERTIFICATE-----
+      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
+      7HJNBB1ZTjnrxJAgCQgNBIQ=
+      -----END CERTIFICATE-----
+
+config:
+    issuer: https://dex.cluster.local
+
+    storage:
+      type: kubernetes
+      config:
+        inCluster: true
+
+    web:
+      http: 0.0.0.0:8080
+      tlsCert: /etc/dex/tls/tls.crt
+      tlsKey: /etc/dex/tls/tls.key
+
+    frontend:
+      theme: ccloud
+      issuer: "Converged Cloud Kubernetes"
+
+    expiry:
+      signingKeys: "6h"
+      idTokens: "5m"
+
+    logger:
+      level: debug
+
+    connectors:
+    - type: ldap
+      id: ccloud
+      name: Converged Cloud staging LDAP
+      config:
+        host: ldap.staging.cloud.sap:636
+        bindDN: CN=monsoon-service,CN=Users,DC=ad,DC=staging,DC=cloud,DC=sap
+        bindPW: F40abK1avD4S!Gs
+        usernamePrompt: CCloud username
+        insecureSkipVerify: true
+
+        userSearch:
+          baseDN: OU=Identities,DC=ad,DC=staging,DC=cloud,DC=sap
+          filter: "(objectClass=person)(memberOf=CN=CP_CONV_K8S_USERS,OU=Permissions,OU=CCloud,DC=ad,DC=staging,DC=cloud,DC=sap)(camObjectStatus=X)(!(userAccountControl:1.2.840.113556.1.4.803:=2))"
+
+          username: cn
+          idAttr: distinguishedName
+          emailAttr: mail
+          nameAttr: displayName
+
+        # Group search queries for groups given a user entry.
+        groupSearch:
+          baseDN: OU=Permissions,OU=CCloud,DC=ad,DC=staging,DC=cloud,DC=sap
+          filter: "(objectClass=group)"
+
+          userAttr: distinguishedName
+          groupAttr: member
+          nameAttr: cn
+
+    - type: github
+      id: github
+      name: GitHub
+      config:
+        clientID: 1c77e399f017eeae92e3
+        clientSecret: d48f9d2ca35db0c4f9c3231a4261bb145c0cccab
+        redirectURI: https://dex.cluster.local/callback
+
+        orgs:
+        - name: monsoon
+          teams:
+          - core
+          - converged-cloud-dev-team
+        loadAllGroups: false
+
+        teamNameField: slug
+        useLoginAsID: true
+        hostName: github.wdf.sap.corp
+        rootCA: /etc/dex/ca/sapnetca_g2.pem
+
+    # - type: keystone
+    #   id: ccadmin
+    #   name: Keystone - cloud-admins
+    #   config:
+    #     host: http://keystone.monsoon3.svc.cluster.local:5000
+    #     domain: ccadmin
+    #     adminUsername: admin
+    #     adminPassword: openstack
+    #     adminUserDomain: Default
+    #     adminProject: admin
+    #     adminDomain: Default
+    #     includeRolesInGroups: true
+    #     authScope:
+    #       domainName: ccadmin
+    #       projectName: cloud_admin
+
+    # - type: keystone
+    #   id: monsoon3
+    #   name: Keystone - monsoon3
+    #   config:
+    #     host: http://keystone.monsoon3.svc.cluster.local:5000
+    #     domain: monsoon3
+    #     adminUsername: admin
+    #     adminPassword: openstack
+    #     adminUserDomain: Default
+    #     adminProject: admin
+    #     adminDomain: Default
+
+    oauth2:
+      skipApprovalScreen: true
+      responseTypes: ["code", "token", "id_token"]
+      passwordConnector: ccloud
+
+    staticClients:
+    - id: kubernetes
+      redirectURIs:
+      - 'http://localhost:33768/auth/callback'
+      - 'https://localhost:33768/auth/callback'
+      - 'https://kubernetes-dashboard.cluster.local/oauth/callback'
+      - 'http://kubernetes-dashboard.cluster.local/oauth/callback'
+      name: 'kubernetes'
+      secret: ZXhhbXBsZS1hcHAtc2VjcmV0
+
+    enablePasswordDB: false
+
+    #staticPasswords:
+    #- email: "backdoor@sap.com"
+    #  # bcrypt hash of the string "password"
+    #  hash: "$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W"
+    #  username: "admin"
+    #  userID: "08a8684b-db88-4b73-90a9-3cd1661f5466"

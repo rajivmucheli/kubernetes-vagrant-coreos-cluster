@@ -1,0 +1,349 @@
+---
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: dex
+
+---
+
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  labels:
+    app: dex
+  name: dex
+  namespace: dex
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: dex
+    spec:
+      serviceAccountName: dex # This is created below
+      containers:
+      - image: hub.global.cloud.sap/monsoon/dex:latest
+        name: dex
+        command: ["/usr/local/bin/dex", "serve", "/etc/dex/cfg/config.yaml"]
+
+        ports:
+        - name: http
+          containerPort: 5554
+
+        volumeMounts:
+        - name: config
+          mountPath: /etc/dex/cfg
+        - name: tls
+          mountPath: /etc/dex/tls
+      volumes:
+      - name: config
+        configMap:
+          name: dex
+          items:
+          - key: config.yaml
+            path: config.yaml
+      - name: tls
+        secret:
+          secretName: dex-tls
+
+---
+
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: dex
+  namespace: dex
+data:
+  config.yaml: |
+    issuer: https://dex.cluster.local
+
+    storage:
+      type: kubernetes
+      config:
+        inCluster: true
+
+    web:
+      http: 0.0.0.0:5554
+      tlsCert: /etc/dex/tls/tls.crt
+      tlsKey: /etc/dex/tls/tls.key
+
+    frontend:
+      theme: ccloud
+      issuer: "Converged Cloud Kubernetes"
+
+    expiry:
+      signingKeys: "6h"
+      idTokens: "1h"
+
+    logger:
+      level: debug
+
+    connectors:
+    - type: ldap
+      id: ccloud
+      name: Converged Cloud staging LDAP
+      config:
+        host: ldap.staging.cloud.sap:636
+        bindDN: CN=monsoon-service,CN=Users,DC=ad,DC=staging,DC=cloud,DC=sap
+        bindPW: F40abK1avD4S!Gs
+        usernamePrompt: CCloud username
+        insecureSkipVerify: true
+
+        userSearch:
+          baseDN: OU=Identities,DC=ad,DC=staging,DC=cloud,DC=sap
+          filter: "(objectClass=person)(memberOf=CN=CP_CONV_K8S_USERS,OU=Permissions,OU=CCloud,DC=ad,DC=staging,DC=cloud,DC=sap)(camObjectStatus=X)(!(userAccountControl:1.2.840.113556.1.4.803:=2))"
+
+          username: cn
+          idAttr: distinguishedName
+          emailAttr: mail
+          nameAttr: cn
+
+        # Group search queries for groups given a user entry.
+        groupSearch:
+          baseDN: OU=Permissions,OU=CCloud,DC=ad,DC=staging,DC=cloud,DC=sap
+          filter: "(objectClass=group)"
+
+          userAttr: distinguishedName
+          groupAttr: member
+          nameAttr: cn
+
+    - type: github
+      id: github
+      name: GitHub
+      config:
+        clientID: 1c77e399f017eeae92e3
+        clientSecret: d48f9d2ca35db0c4f9c3231a4261bb145c0cccab
+        redirectURI: https://dex.cluster.local/callback
+
+        orgs:
+        - name: monsoon
+          teams:
+          - core
+          - converged-cloud-dev-team
+        loadAllGroups: false
+
+        teamNameField: slug
+        useLoginAsID: true
+        hostName: github.wdf.sap.corp
+        rootCA: /etc/dex/tls/sapnetca_g2.pem
+        
+    #- type: keystone
+    #  id: keystone_ccadmin
+    #  name: Keystone - cloud-admins
+    #  config:
+    #    host: http://keystone.monsoon3.svc.cluster.local:5000
+    #    domain: ccadmin
+    #    adminUsername: admin
+    #    adminPassword: openstack
+    #    adminUserDomain: Default
+    #    adminProject: admin
+    #    adminDomain: Default
+    #    authScope:
+    #      domainName: ccadmin
+    #      projectName: cloud_admin
+    #    includeRolesInGroups: true
+
+    oauth2:
+      skipApprovalScreen: true
+      responseTypes: ["code", "token", "id_token"]
+      passwordConnector: ccloud
+
+    staticClients:
+    - id: kubernetes
+      redirectURIs:
+      - 'http://localhost:33768/auth/callback'
+      - 'https://kubernetes-dashboard.cluster.local/oauth/callback'
+      - 'http://kubernetes-dashboard.cluster.local/oauth/callback'
+      name: 'kubernetes'
+      secret: ZXhhbXBsZS1hcHAtc2VjcmV0
+
+      enablePasswordDB: false
+
+    #staticPasswords:
+    #- email: "backdoor@sap.com"
+    #  # bcrypt hash of the string "password"
+    #  hash: "$2a$10$2b2cU8CPhOTaGrs1HRQuAueS7JTT5ZHsHSzYiFPm1leZck7Mc8T4W"
+    #  username: "admin"
+    #  userID: "08a8684b-db88-4b73-90a9-3cd1661f5466"
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: dex
+  namespace: dex
+spec:
+  type: ClusterIP
+  ports:
+  - name: dex
+    port: 5554
+    protocol: TCP
+  selector:
+    app: dex
+
+---
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    app: dex
+  name: dex
+  namespace: dex
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRole
+metadata:
+  name: dex
+  namespace: dex
+rules:
+- apiGroups: ["dex.coreos.com"] # API group created by dex
+  resources: ["*"]
+  verbs: ["*"]
+- apiGroups: ["apiextensions.k8s.io"]
+  resources: ["customresourcedefinitions"]
+  verbs: ["create"] # To manage its own resources, dex must be able to create customresourcedefinitions
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: dex
+  namespace: dex
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: dex
+subjects:
+- kind: ServiceAccount
+  name: dex           # Service account assigned to the dex pod, created above
+  namespace: dex  # The namespace dex is running in
+
+---
+
+kind: Secret
+apiVersion: v1
+metadata:
+  name: dex-tls
+  namespace: dex
+  labels:
+    name: dex-tls
+data:
+  tls.crt: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUUvekNDQXVlZ0F3SUJBZ0lKQUxhNVhkWkJQN1JyTUEwR0NTcUdTSWIzRFFFQkN3VUFNQkl4RURBT0JnTlYKQkFNTUIydDFZbVV0WTJFd0hoY05NVGd4TVRNd01UWXdNakE1V2hjTk1Ua3hNVE13TVRZd01qQTVXakFjTVJvdwpHQVlEVlFRRERCRmtaWGd1WTJ4MWMzUmxjaTVzYjJOaGJEQ0NBaUl3RFFZSktvWklodmNOQVFFQkJRQURnZ0lQCkFEQ0NBZ29DZ2dJQkFQQjVyMTR5aVlGVnh5TUxCWTZtVHdzbmFWOEhkNXlFOU9SNm11ZG1WUGYvZWxCc3FEMVcKU0hFTXp0dExTY1dLeUVyejR5aUhjRVY3ZTR1aUIvV21idU1mV2wyblRCMlNkTWZnb2hldU8vSWFmT3pnaW5aSQozQXNZdURMTkNyNVRVZWVwZExrUExZYUoyTUJVVjVnNTBva0lEOUx5M2VRU1lvMFpoYlpKb29oRXg1M0lzVk1FCkw1aTBlMXczMWF5SDZ6ZmN2YXMzd2VJN3pURWcyT1l2Y09nVHNLREhjTk9TUVZuTmg2UE5DUmpHL09VWHRsZzUKMHNyclVScGFsZjBIbHZ1QUtXQ2h4N0VRZmhmemRFU2FTZ3BuYkFUbktZbXZXcFRkYVhxa1dFREJqNVBaVUs3bgpmaXRnU1o1ek5rSmU4RHpaOUNQWVVBTDAzdWxQZnlZYU9CTGQrQldJY00zYWwzRExqbENkbnI4RjNiVkx4MG9NCndWMEJ2Wnpsb3JjcGV5QlBnNmk0eFhvN3ZaazBUV05sWFJQV3RNUEtIa2hScG1Kc2tjNy81Uko0dkJlUUpMd2YKbmdQeUlNdW4rdEVNamJFcVVsZ1N5N2g0dmY1SmNxVjBsM2Rpc2VhMzVqbFdnYW9sRzlNM3FVbk90UTlpN2V6Rwo4aWoxM2xWK0ZSK0JaZ0RjVWNXell0SXlDaDkyVHRpNGtxTFg2QWZRYkw1QjFSaGFqcEpsbFhsbnJJVThhNEx5CkZiR2RNY21YNE1EejlYN3RLT0h0aTdtcjVPaDBITUdTdU1YTllqcDdXekVVVG1sR2o0Smh1eDBLOGo2OWN1eXYKd3J2VU9pYUpTSFhMRU9tNHNqMEx4ZGR2OWkweFA1MEtFNFduWFJkODRtbVRiT3lPN280MHhrZHBBZ01CQUFHagpUakJNTUFrR0ExVWRFd1FDTUFBd0N3WURWUjBQQkFRREFnWGdNRElHQTFVZEVRUXJNQ21DRVdSbGVDNWpiSFZ6CmRHVnlMbXh2WTJGc2doUnZjR1Z1YVdRdVkyeDFjM1JsY2k1c2IyTmhiREFOQmdrcWhraUc5dzBCQVFzRkFBT0MKQWdFQVc2ek4yRG4yS3dDSS95bVdEVjRpRVZzM1VyNjE0Q2JNejJ1ZDlpTk1RNFFUc1VSc0g0WStubDhWbDg5QgpGUVpWTzUwL2NLTzQrYXhYdnNmTDV4Vm94KzV6RFdvdmVGWlFBZkxqaGI2VkwyMldQMSt3SXh3N3hMMENMbzdtCjlhU2RUWG1kWm1FbEhsVUYreWhJOTE3Z1BZdXpZNm1oQVRHODBGcGtBOExyVU1TVXN1YlJUVllSKzc2UWRDZUwKVklnOWhSTGIrREduL0w4OVA4OGoyR0FwYUNWSmhZLzN1Z1RnU3dmRk5MK01SUkx6TlB6V09QVGo5dFN0ZkZmYQpPeEduY29Tdkp4TnJweUNWRTN5aXZucWtXZlNGSko4WVRkVW9hQitEOHF3QWpCcXpzMTZIeENlK1lGRTFuc2dYCnkzZHN3NDdhOWl4OXc1RzVLZzdzT2RhZEVMQnk0RUFLVXYvN2MwSXNYdFdnbTlCQ3Z2akFrdXlDOUNxRFBMMkUKTDNZVmVCM01kWkJ5L0N4aFBHR1pUNmRmeHBKcEIrbldDRnNGTjBkSk1sSk9DV3FRWXVkdnJyVEQwdTRqZngwTQp0b2dtTzJ5N3NwZmJrV2RlSDgzMEpTT2g1dlc3RWxwWWhSUEpxTVdDRXVEcEtOaW1kRXQxRFNPWXROYk8rclo0CnFFN1NiT20wc0VnUlhCdG9zNlhhNjF6Z3VRUVRJK21kMkFINWJ6THgzWVVJMFozMnBvaWQ2dHpmdXVCcTcvUXUKRTdoUDNoWFZhVHFzNTdYaG9FbWdQdXRTeWU2elJFRGxQTndTYy9wQkdNWFFWNnhwTEtjUUdaUUlnQVBwc2thZgpmSXdZV2lJclErM2RsMmp4d0NGZHQvcGUwOXp6RDRUem5VTVYyOUZVdmVmNFd2ST0KLS0tLS1FTkQgQ0VSVElGSUNBVEUtLS0tLQo=
+  tls.key: LS0tLS1CRUdJTiBSU0EgUFJJVkFURSBLRVktLS0tLQpNSUlKS2dJQkFBS0NBZ0VBOEhtdlhqS0pnVlhISXdzRmpxWlBDeWRwWHdkM25JVDA1SHFhNTJaVTkvOTZVR3lvClBWWkljUXpPMjB0SnhZcklTdlBqS0lkd1JYdDdpNklIOWFadTR4OWFYYWRNSFpKMHgrQ2lGNjQ3OGhwODdPQ0sKZGtqY0N4aTRNczBLdmxOUjU2bDB1UTh0aG9uWXdGUlhtRG5TaVFnUDB2TGQ1QkppalJtRnRrbWlpRVRIbmNpeApVd1F2bUxSN1hEZlZySWZyTjl5OXF6ZkI0anZOTVNEWTVpOXc2Qk93b01kdzA1SkJXYzJIbzgwSkdNYjg1UmUyCldEblN5dXRSR2xxVi9RZVcrNEFwWUtISHNSQitGL04wUkpwS0NtZHNCT2NwaWE5YWxOMXBlcVJZUU1HUGs5bFEKcnVkK0syQkpubk0yUWw3d1BObjBJOWhRQXZUZTZVOS9KaG80RXQzNEZZaHd6ZHFYY011T1VKMmV2d1hkdFV2SApTZ3pCWFFHOW5PV2l0eWw3SUUrRHFMakZlanU5bVRSTlkyVmRFOWEwdzhvZVNGR21ZbXlSenYvbEVuaThGNUFrCnZCK2VBL0lneTZmNjBReU5zU3BTV0JMTHVIaTkva2x5cFhTWGQyS3g1cmZtT1ZhQnFpVWIwemVwU2M2MUQyTHQKN01ieUtQWGVWWDRWSDRGbUFOeFJ4Yk5pMGpJS0gzWk8yTGlTb3Rmb0I5QnN2a0hWR0ZxT2ttV1ZlV2VzaFR4cgpndklWc1oweHlaZmd3UFAxZnUwbzRlMkx1YXZrNkhRY3daSzR4YzFpT250Yk1SUk9hVWFQZ21HN0hRcnlQcjF5CjdLL0N1OVE2Sm9sSWRjc1E2Yml5UFF2RjEyLzJMVEUvblFvVGhhZGRGM3ppYVpOczdJN3VqalRHUjJrQ0F3RUEKQVFLQ0FnRUE3a25XUWNSWVIyWGxYMDh6b1lnZytVK0RkWndqcFdDR2ZzVVRMRXRWMVMwK1dlVmh6TzNyK01JVgpWRzVGV3M5TDdDSENMYzRQclhwUUVTeHRNTGxNVmhraVpYMDZ5bTd1ODRVZmVkRzRLdzZlVGVldXJNbEQ2bWNEClY2dWdncnB6aGRpQUJrVUkrckVyckdHbkx2dlZLTjVwTjhKYnAvMmoxR2UrL01QNG40bHdPR1MvZWlEQ3ZWSFMKajYzd09QZXlXSGVQSnRPb2R2S0ZRTEpvMjZlVS9STk55ZlAzVkY4d0RMbkNOOGtidzRhaTRLeGZqd3MxV3NoVgpaSVR3N1h1UTNBVENlN096K2p2Nmh1ZENoaHhSVS8vcHBPNGZWZ1VDQUZOcWl4SEJOZUhYMFV6ZFM0T3VuWExiCllIeVAvckt1NGMyanc4VThlOEdFQmJNMXJsNzZ3YU9BVUt1b3lRS1dsbE8rWHM3T2MyZi9NeE9CUUVIT2JKZFgKWU1rbm40VU8xOThLZHZaTXJPQWlQTlN0dWxTcDdKRFNCS0wwWGpwTHFoSDJlbGRNK3BjbXB1eTVtQ3RBb0lHVwpMRElTOGhITHpOL3FPMlB3dEVVZEhPYU1yOGFxVThVMVZKZ2ZHODZ0SXc4RXZzRmw1Q2FmUFZxU0ZnWXZmS3pYCjVTcENOa1YzRElhYW83THdSeE9WSVE3M2ZEK2ZRVkhSeFBjWFhVNGJza0swK3cyWkVpNS95eWc0eHhVRVpYTnYKM2JmY05rbG5zM0J2UE5WdXRrV2tkQk9GaFdlZHhHTzIrYXZnay9vR2NoZ2JjV29PUUM1YWJMaHN5Vkd0NnIwQwp2eXBZV2U4aHBqY1VtRC8xaGZSdms2T1h6Qlg5Ylo2NFRhOHEvNWtma2ZIRUpvcE9QUUVDZ2dFQkFQMzBWZEpaClBNc2JKVWllSDEyWC9vMWVsNGRIbDlwcG05UXZ6ajliSU91VC9iNGhrTnh1YWFPZ2E0c0FUZ29tUEtSd2xlU0IKUEd6SG0zTWphZVRpbE5XMGZKQ2dyTmFOV2VGdVlBUDk1T1NLOGRMU1krNTNlWkN0QWxHdTFudG9PVzlIVGx2RQpBRFlDeWF6UndVU1BEdWpYSm5iMGtMLzBvMnUvQS81eGp1RXpacVZqMFNnY1FFa3M3NFNhcllhdTVtRnFmUXpLCnhkN0EvdzRuaHppUEdiVDlwNHJrM05qVlRQdDhsNnFVMFZ2K2Zyd1ZLNGY5eG00blptR3JsTFVMK2xjY2kzbzQKVUoxYi9xSXl5NTVYeGp4c2lhVzVBaVZvVDF5M0FDZmNGMmxXVlg0TnNYclNuRlBZK2FaVjRTL3ozUTA2MTE4QgpDWlprS1k2cnFzUGVqU0VDZ2dFQkFQSnBqaWp6RUkxdWJGcnhpZE80eFFLWmZmOTBaU3RCbWt0cVBkdzVqdlpOCld6a3R3RFBXeTBvNkNjWDVLazJCdWdTMHMvaEJYcUtEcU5TK2xDcWNib25PdmNIdFpUYnZ1OFNnOFR3K3FNeTMKc1RuNk93anRkczh0d2RQNUNGb3huQVNET3RCQ2JBa0labDVYOW5jVVU2RFZFV1U3d0w3UFB5QWlhS3haR2diZQo2cmhqcnQzQVNNa01DQzR3TkVQZEFlSEN4ZU12K3czTjVzYVN3UUlRWmpoRllOeGZURlhUdEl5ZTNlQTNtekl3CmR1ZmIzRkVFckhucG91ck9kTDZaWlY2QkU2azdVV3JlN1RsUFhUYkIwU2hKdktKbnVzYmYyaXFNeVpxeStUUVYKNlNoT0hWbzhTZi9DeFVsOE9xa1JJRGI5NWpsNjF1aE9hdFA5NXNzOTZVa0NnZ0VBTUJpaVdHQkdQMEU0NG5QdwpCTTNRaS8ycVBSaTJEY3VLazdrcUdwMnJzbklvMEdXVEJleHpYV1g0ZUM3cW1NbDlHcmVuNjhyK0lxdjdLT2RBCkd2VStzdXFuM014UmI2RDlzTkF5cHc3aTF0WHB6ci9CNVZ3RFRmODJQVG9ick91a1ZRcndNRGtDd1RmdDhpa1gKcldCYXRvWm81b2FURTRmRm01WmxyejdhakpRcmtJOURBWkc0S3lPemlTMnlSNXZBVGhyWTdCOUxNbERpL1U5SApNTk1KVDFucTdVZEMvRjRKWW1mS1lhZ2xyb0tZaGc2TVhBa1lGNnltbTBEZnZSb3pvMlBvbHBFcjAyR2s3QnNxCnJTWjZpTjhWZ3FseldwcFN6WUJyS3lGbjNhOVlLYk4yTllqRnlxdUJQSnR2TnFHODc5Q0JFYUVrcTdMMG0reXYKUHNGYmdRS0NBUUVBdGhvMWdPMlhjYWVTSG45MFdtaGpGeURYVmgvS0lFU1g5QzlMYVRTVUFOTDd4R2hxQ29kQgpEL0dwaGQ4M3VDSEw2OTBUbFZzR0RHOTdWTllWMkN6TG5ScUIwanpUM0FFYnZRcHFMaWVrQnFXM3JTWWRVd2VRClNQTEd1TVpMVC9ZVWpnOUhEMHZXZkxLaXRCekFPWlE3Zm9hUkdzdFliLzZnSFRPOERqeWhJS2cxQzI5VzNaNmwKRHVMTEFtZVQyNmNhMHMzT2VteUEzRTNoSHlyL2N0MSs3S2F4ck5xcUxZOXNBbmNWbG1vdlcvU3NYbUQ3a0tGQwpNQk1qSCtFWU1sWnBvQ1MyOEZwdlB5bFlhOFVDOFMrSVFBdWtlUndUWTNLbUlYREJ3a1RRa0NBbGx2R1hlMEh2CkZRTHIwZGhRK05DMHNwcnBhQ1N2YkxQNzdHVEFDODNtZ1FLQ0FRRUE0OHZCTnRxZXVRMkg2WEtoSy91RTlta3kKZmpFaVp3YUtXa0piNTlYRmhYK2xvWUlSamZWZmZWMzJGRnlwNDdhVDhDZm81bnU4WmhKL0NmalFSd2VOZXBtQQp2WUpIOER5dG1xaWZYYVZKSG1rMWdONjIrWWh2cHU1Ym1TOFp6RGE5a2lKazNLa3dXM2NUckE1cmRCSlVkTkNYCkZzTktsRkRsdXlkOGpXMGFMTnJhZ1p5dS84ZVFub0NuYXl3bm1vdlVlTEFwTmc1M2VrZEI5bXNqZWI5Q3Q1QWEKK010TVZsWnh0Qmc4U1hQaTgyTVJ2U0MzRFp1TCtiTWpjYlRYcERTTzlrN056VklDWFBvSFhHTDNpcFAzQUVVYgp4bThkM0g2eDhmT3B1TXNjUWpTd2dkQ1dQR2lPa3dmM3BwUDRQeWFTVzJUT3A3b2h6WDhwUmk5WldWb25vdz09Ci0tLS0tRU5EIFJTQSBQUklWQVRFIEtFWS0tLS0tCg==
+  sapnetca_g2.pem: LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUdQVENDQkNXZ0F3SUJBZ0lLWVE0R053QUFBQUFBRERBTkJna3Foa2lHOXcwQkFRc0ZBREJPTVFzd0NRWUQKVlFRR0V3SkVSVEVSTUE4R0ExVUVCd3dJVjJGc2JHUnZjbVl4RHpBTkJnTlZCQW9NQmxOQlVDQkJSekViTUJrRwpBMVVFQXd3U1UwRlFJRWRzYjJKaGJDQlNiMjkwSUVOQk1CNFhEVEUxTURNeE56QTVNalExTVZvWERUSTFNRE14Ck56QTVNelExTVZvd1JERUxNQWtHQTFVRUJoTUNSRVV4RVRBUEJnTlZCQWNNQ0ZkaGJHeGtiM0ptTVF3d0NnWUQKVlFRS0RBTlRRVkF4RkRBU0JnTlZCQU1NQzFOQlVFNWxkRU5CWDBjeU1JSUNJakFOQmdrcWhraUc5dzBCQVFFRgpBQU9DQWc4QU1JSUNDZ0tDQWdFQWp1UDdIai8xblZXZnNDcjhNL0pYOTBzODhJaGRUTGFvZWtyeHBMTkoxVzI3CkVDVVFvZ1FGNkhDdS9SRkQ0dUlvYW5IMG9HSXRibXAycDhJMFhWZXZIWG5pc3hRR3hCZGtqeithNlp5T2NFVmsKY0VHVGNYZXYxaTBSK014TThZMldXL0xHREtLa1lPb1ZSdkE1Q2hoVEx0WDJVWG5CTGNSZGYybE1NdkVIZC9ubgpLV0VRNDdFTkMrdVhkNlVQeHpFK0pxVlNWYVZOK05OYlhCSnJJMWRkTmRFRTMvKytQU0FtaEY3QlNlTldzY3M3CncwTW9Qd0hBR012TUhlOXBhczF4RDNSc1JGUWtWMDFYaUpxcVViZjFPVGRZQW9Vb1hvOW9yUFByTzdGTWZYaloKUmJ6d3pGdGRLUmxBRm5LWk9WZjk1TUtsU284V3poZmZLZjdwUW11YWJHU0xxU1NYekl1Q3B4dVBsTnk3a3dDWApqNW04VTF4R043TDJ2bGFsS0VHMjdyQ0x4L242Y3RYQWFLbVFvM0ZNK2NIaW0za28vbU95KzlHRHdHSWdUb1gzCjVTUVBubUNTUjE5SDNuWXNjVDA2ZmY1bGdXZkJ6U1FtQmR2Ly9yallrazJaZUxuVE1xRE5Yc2dUN2FjNkxKbGoKV1hBZGZkSzIrZ3ZIcnVmN2pza2lvMjloWVJiMi8vdGk1akQzTk02TEx5b3ZvMUdPVmwwdUowTllMc21qRFVBSgpkcXFOekJvY3kvZVYzTDJLeTFMNkR2dGNRMW90bXl2cm9xc0w1Snh6aVAwL2dSVGovdDE3MEdDL2FUeGpVbmhzCjd2RGViVk9UNW5mZnhGc1p3bW9selRJZU9zdk00ckFuTXU1R2Y0TW5hL1NzTWk5dy9vZVhGRmMvYjFXZTFhMEMKQXdFQUFhT0NBU1V3Z2dFaE1Bc0dBMVVkRHdRRUF3SUJCakFkQmdOVkhRNEVGZ1FVT0NTdmpYVVMvRGcvTjRNUQpyNUE4L0JzaFd2OHdId1lEVlIwakJCZ3dGb0FVZzhkQi9RNG1UeW5CdUhtT2hucmh2N1hYYWdNd1N3WURWUjBmCkJFUXdRakJBb0Q2Z1BJWTZhSFIwY0RvdkwyTmtjQzV3YTJrdVkyOHVjMkZ3TG1OdmJTOWpaSEF2VTBGUUpUSXcKUjJ4dlltRnNKVEl3VW05dmRDVXlNRU5CTG1OeWJEQldCZ2dyQmdFRkJRY0JBUVJLTUVnd1JnWUlLd1lCQlFVSApNQUtHT21oMGRIQTZMeTloYVdFdWNHdHBMbU52TG5OaGNDNWpiMjB2WVdsaEwxTkJVQ1V5TUVkc2IySmhiQ1V5Ck1GSnZiM1FsTWpCRFFTNWpjblF3R1FZSkt3WUJCQUdDTnhRQ0JBd2VDZ0JUQUhVQVlnQkRBRUV3RWdZRFZSMFQKQVFIL0JBZ3dCZ0VCL3dJQkFEQU5CZ2txaGtpRzl3MEJBUXNGQUFPQ0FnRUFHZEJOQUxPNTA5RlF4Y1BoTUN3RQovZXltQWU5ZjJ1NmhYcTBoTWxRQXV1UmJwbnhyMCs1N2xjdy8xZVZGc1Q0c2xjZWg3K0NIR0NUQ1ZISzFFTEFkClhRZWliZVFvdnNWeDgwQmt1Z0VHOVBzdENKcEhuT0FvV0dqbFpTMnVXejg5WTRPOW5sYStMOVNDdUs3dFdJNVkKK1F1Vmh5R0NENkZESVVDTWxWQURPTFFWOEZmY200NThxNVM2ZUdWaVZhOFk3UE5wdk15RmZ1VVRMY1VJaHJadgplaDR5alBTcHo1dXZRczdwL0JKTFhpbEVmM1ZzeVhYNVE0c3NpYlRTMmFIMno3dUY4Z2doZk12YkxpN3NTN29qClhCRXlseHlhZWd3T0JMdGxtY2JJSThQb1VBRUFHSnpkWjRrRkNZanFaQk1nWEs5NzU0TE1wdmtYRFRWenk0T1AKZW1LNUlsK3QrQjBWT1Y3M1Q0eUxhbVhHNzNxcXQ4UVpuZEozaWk3Tkd1dHY0U1doVllRNHM3TWZqUndiRllsQgp6L041ZUgzdmVCeDlsSmJWNnVYSHVOWDNsaUdTOHBOVk5LUHljZndsYUdFYkQycVpFMGFaUlU4T2V0dUgxa1ZwCmpHcXZXbG9Qamo0NWlDR1NDYkc3RmNZMWdQVlRFQXJlTGp5SU5WSDBwUHZlMUhYY3JuQ1Y0UEFMVDZIdm9ab0YKYkN1QktWZ2tTU29HZ21hc3hqampWSWZNaU9oa2V2RHlhNTJFNW0wV25NMUxEM1pvWnphdnNEU1lndUJQNk1PVgpWaVdOc1ZIb2NwdHBoYkVnZHd2dDNCNzVDRE40a2Y2TU5aZzIvdDhiUmhFUXlLMUZSeThOTWVCbmJSRm5uRVBlCjdISk5CQjFaVGpucnhKQWdDUWdOQklRPQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0t
+
+---
+
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: dex
+  namespace: dex
+spec:
+  tls:
+    - secretName: dex-tls
+      hosts: [dex.cluster.local]
+  rules:
+    - host: dex.cluster.local
+      http:
+        paths:
+        - path: /
+          backend:
+            serviceName: dex
+            servicePort: 5554
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: dex-ldap-cluster-admins
+  namespace: dex
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+  - kind: Group
+    name: CP_CONV_K8S_CLUSTER_ADMINS
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: dex-ldap-admins
+  namespace: dex
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: admin
+subjects:
+  - kind: Group
+    name: CP_CONV_K8S_ADMINS
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: dex-ldap-viewers
+  namespace: dex
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: viewer
+subjects:
+  - kind: Group
+    name: CP_CONV_K8S_USERS
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: dex-github-cluster-admins
+  namespace: dex
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+  - kind: Group
+    name: monsoon:core
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: dex-openstack-cluster-admins
+  namespace: dex
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: cluster-admin
+subjects:
+  - kind: Group
+    name: openstack_group:CCADMIN_CLOUD_ADMINS
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1beta1
+kind: ClusterRoleBinding
+metadata:
+  name: dex-openstack-admins
+  namespace: dex
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: admin
+subjects:
+  - kind: Group
+    name: openstack_role:admin

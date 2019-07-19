@@ -1,0 +1,342 @@
+tags:
+  postgres: true
+
+global:
+  dbPassword: AHardPa55w0rd!
+
+debug: false
+insecure_debug: true
+
+run_db_migration: false
+
+skipRegionCheck: true
+
+release: rocky
+
+api:
+  image: "d062392/loci-keystone"
+  imageTag: rocky-20190705133104
+  #imageTag: stein-20190711100204
+  adminUser: admin
+  adminPassword: openstack
+  adminProjectName: admin
+  cloudAdminDomainName: ccadmin
+  cloudAdminProjectName: cloud_admin
+  cloudAdminProjectId: 9e2c540d162a4e0ba441ab7e9e95a9c5
+
+  auth:
+    # Allowed authentication methods. (list value)
+    methods: password,token,totp,external,oauth1,application_credential
+
+  # SecurID authentication settings over Radius (required for cc_radius)
+  cc_radius:
+    host: jump01.cc.eu-de-1.cloud.sap
+    port: 16451
+    secret: rad4acc9753now
+
+  fernet:
+    maxActiveKeys: 3
+    secrets:
+      0: c1dVSlFZVjRQRnBGR3pwSk1nMll6eEFwX2VDNURwRFVzLVd5aEVYaVI1dz0=
+      1: M1V0dHp6bk5LYzVlQ1doMjdvUUctSGdmVFFEcWxIeDZXdHFDT25vT3RHUT0=
+      2: WmlYLUZUZ1BNVnNPU2tib01YUkc0SkhZMGswLXFfeVF0eTdHbVBjSDZjND0=
+
+  credentials:
+    secrets:
+      0: RUdXZU5oVFR1TUU3TkFqazJrZWpqSE5vZ0lqeHFMTTljeUZxb2dZakNQZz0=
+      1: OUhUQnBzTDBLTkFfTnhqZlFWX0dmc0tlc2FnUUZYTFBrN2hpWldpQmN6cz0=
+
+  metrics:
+    enabled: true
+
+  resources:
+    requests:
+      memory: 1433Mi
+      cpu: 100m
+
+  replicas: 1
+
+  upgrades:
+    revisionHistory: 3
+    podReplacementStrategy: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+      maxSurge: 1
+
+  pdb:
+    minAvailable: 1
+
+cron:
+  image: "d062392/loci-keystone"
+  imageTag: rocky-20190705133104
+  #imageTag: stein-20190711100204
+
+  cronSchedule: "*/5 * * * *"
+
+  resources:
+    requests:
+      memory: 1433Mi
+      cpu: 100m
+
+alerts:
+  enabled: false
+
+tempest:
+  enabled: true
+#  image: "monsoon/rally-openstack"
+#  imageTag: "latest"
+# tempest domain - user credentials
+  adminPassword: topSecret123
+  userPassword: topSecret123
+# tempest domain-id  -- do not set in production environments!
+  domainId: db695060a048401880cfbe078a6c802c
+
+sentry:
+  enabled: true
+  dsn: 'requests+https://89d84086d7b24941bfc7fec7b62a8e5a:b047b144f6444b30b2473433f9bfdf88@sentry.staging.cloud.sap/18?verify_ssl=0'
+
+services:
+  type: ClusterIP
+  externalip: '172.17.8.101'
+
+  ingress:
+    enabled: true
+    #limitRps: 10
+
+    #vice_president: true
+
+    x509:
+      ca: |
+        -----BEGIN CERTIFICATE-----
+        MIIB+jCCAWOgAwIBAgIEAQAAADANBgkqhkiG9w0BAQUFADAvMQswCQYDVQQGEwJE
+        RTEPMA0GA1UEChMGU0FQLUFHMQ8wDQYDVQQDFAZTU09fQ0EwHhcNOTgwNTA0MTI1
+        OTMzWhcNMjMwODMxMTIwMDAwWjAvMQswCQYDVQQGEwJERTEPMA0GA1UEChMGU0FQ
+        LUFHMQ8wDQYDVQQDFAZTU09fQ0EwgZ8wDQYJKoZIhvcNAQEBBQADgY0AMIGJAoGB
+        APy5r2Ns7e13CeTfbNgC+eQ2ZrQ3/KmuY7kzQrRcnMnm3oZ6eEYvBozjBQMiYtnw
+        SMm9vhbINAM+6Tq2/8xaTFaSMCsN4HnXjC/emjhjrX2C6GZRpB0pxieajLWJ/8vj
+        eRlmBsc7uoAxgXgVtkg7U1ihb2wpEoneoiP7cIBCXJoxAgMBAAGjIzAhMA8GA1Ud
+        EwEB/wQFMAMBAf8wDgYDVR0PAQH/BAQDAgH2MA0GCSqGSIb3DQEBBQUAA4GBAHFp
+        8soQSqAnOJ1AlfHjDdahyIzaeYtC+Sjjhm1EcJF9wR+VONnOpPDlsXtyMKHcrNe9
+        roUSxq0fYeljalisxSIzWHMaVOXr1aXxOk0Z8XmG7Uud7LyTPwMp4YTof4d6xxTg
+        vrEcgtBVIuzM+sVEp7RRM6Y+fL9u+69krtndZ8Ft
+        -----END CERTIFICATE-----
+        -----BEGIN CERTIFICATE-----
+        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
+        l3Nc17FIfDmliGxn+g/FBCQ=
+        -----END CERTIFICATE-----
+        -----BEGIN CERTIFICATE-----
+        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
+        -----END CERTIFICATE-----
+
+  public:
+    scheme: https
+    host: identity-3
+    tlsCertificate: |
+      -----BEGIN CERTIFICATE-----
+      MIIEJzCCAw8CCQCZVRXiuaCOjDANBgkqhkiG9w0BAQsFADAVMRMwEQYDVQQDEwpt
+      aW5pa3ViZUNBMB4XDTE5MDYxNzE1MTcxNVoXDTIwMDYxNjE1MTcxNVowgZUxCzAJ
+      BgNVBAYTAkRFMRswGQYDVQQIDBJCYWRlbi1XdWVydHRlbWJlcmcxETAPBgNVBAcM
+      CFdhbGxkb3JmMQ8wDQYDVQQKDAZTQVAgU0UxIjAgBgNVBAsMGUluZnJhc3RydWN0
+      dXJlIEF1dG9tYXRpb24xITAfBgNVBAMMGGlkZW50aXR5LTMuY2x1c3Rlci5sb2Nh
+      bDCCAiIwDQYJKoZIhvcNAQEBBQADggIPADCCAgoCggIBALSDPzbgeMldxhd3wLUQ
+      QupgU64uu+SL6E/s6YTVTY6T3ehRQNhqSMYD0u8jkY/kmUAjhEJ1Xn6IV+taqjbF
+      P/CZex3cspoSEnXBn0a8zcnsi6JFizPL+uXhlZu8G/VEj3lAXTQQv+808Z5O1m/w
+      Vs3HMD+hiGb5Ljusb52SYBFra5HYD7/xi2CeOQ8Fu7kF2Y2IGJdheeb601LiH02Y
+      NtRtFSfI9xPqukYhIx38lkpCJWGhCYNRpjPp37Gi3Qv8TngHrc37d/2W2Wjp0smX
+      ciwLL6iRZJBOPkekfYX7ZGEWHJ2SyA0IDwwuUcqbFaZOe7SLq+oWLBwZAZCOL1Hr
+      hAukYCIAfoH2yHkW13uEH3xc0FXxhR0j12hsqAExNjPndYA4OOMruFBRME/2+HuI
+      bsJEbelDR7VlGkiQoSlBK1N6st2s7fsfN+XhGClaThBcDfd46YWBTV+bFfjPvAPP
+      lRhFY1ZvMuMuTyLAivazt7xBlXXeah7cg4NPdyurtX2pEjK8IiEPRXgjazuhysuU
+      WO3sEvbpklCAnQOegHbX1gQfAaWOkIlnve9Pp/laM1ZQsuJnqh7vhv8HXLXlAysV
+      cLGDFDKvr9xht42pUpYM1xVWGr5R/0DnFxiTes3G2k64cSyAHMj6OjAeclrgWi6E
+      F80bCOiT96t2pWyCsJmb2UQFAgMBAAEwDQYJKoZIhvcNAQELBQADggEBAK7rf7Q4
+      kccCboe3FOsnXTMkJKSiN/1hDHAFeTfanQuWbhm2sA/P1QtPg9yWNXnox4TDDYF7
+      /Ua6n20J0CPV845/CrihGPUM3JfcjfsrSXaEaABV6bCq/0/J4StQdP+3P20YYyeh
+      J5nEoKJu577S/OmIKMPDaxJ/VuNPQ6HTvw/to2ieShYM2Kzezf8nleab7oUSijYX
+      0Un1dxbH+PmhXw/cwIU1oU0XUrT4eaBS13bO/D5LuMRV6XZhxcN5KetCoNMo9n9d
+      eWvB/6pm/xK/6LSp+RDwj6ln5FOcUgjGTkPmNoKAqk1B0AXTGegaV1YNU9XeyNdH
+      i4YEvbgHfyFoTo4=
+      -----END CERTIFICATE-----
+    tlsKey: |
+      -----BEGIN RSA PRIVATE KEY-----
+      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
+      -----END RSA PRIVATE KEY-----
+
+  admin:
+    scheme: https
+    host: identity-3
+
+postgresql:
+  postgresPassword: secret123
+  persistence:
+    enabled: true
+    #existingClaim: db-keystone-pvclaim
+    accessMode: ReadWriteOnce
+    size: 1Gi
+  backup:
+    enabled: false
+    os_password: Dw9QKthZRCUMQUf
+
+pgmetrics:
+  resources:
+    limits:
+      memory: 128Mi
+      cpu: 10m
+    requests:
+      memory: 64Mi
+      cpu: 10m
+
+rabbitmq:
+  # host: rabbitmq
+  persistence:
+    enabled: true
+    size: 1Gi
+    accessMode: ReadWriteOnce
+
+  users:
+    default:
+      password: admin123
+    admin:
+      password: secret123
+
+  metrics:
+    enabled: false
+    password: openstack
+
+memcached:
+  memcached:
+    maxItemMemory: 512
+
+  resources:
+    limits:
+      memory: 1024Mi
+      cpu: 100m
+    requests:
+      memory: 128Mi
+      cpu: 50m
+
+  metrics:
+    enabled: false
+
+rbac:
+  enabled: false
+
+watcher:
+  enabled: true
+
+lifesaver:
+  enabled: false

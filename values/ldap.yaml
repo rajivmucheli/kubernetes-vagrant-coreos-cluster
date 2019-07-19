@@ -1,0 +1,54 @@
+tls:
+  enabled: false
+  secret: ldap-tls-secret
+  CA:
+    enabled: false
+    secret: ldap-ca-secret
+
+service:
+  externalIPs: ['172.17.8.101']
+
+# Default configuration for openldap as environment variables. These get injected directly in the container.
+# Use the env variables from https://github.com/osixia/docker-openldap#beginner-guide
+env:
+  LDAP_ORGANISATION: "Converged Cloud"
+  LDAP_DOMAIN: "ldap-proxy.cluster.local"
+  LDAP_BACKEND: "mdb"
+  LDAP_TLS_ENFORCE: "false"
+  LDAP_REPLICATION: "false"
+  LDAP_LOG_LEVEL: "256"
+  LDAP_READONLY_USER: "true"
+  LDAP_READONLY_USER_USERNAME: "readonly"
+  LDAP_READONLY_USER_PASSWORD: "readonly"
+  LDAP_REMOVE_CONFIG_AFTER_SETUP: "false"
+
+# Default Passwords to use, stored as a secret. If unset, passwords are auto-generated.
+# You can override these at install time with
+# helm install openldap --set openldap.adminPassword=<passwd>,openldap.configPassword=<passwd>
+adminPassword: admin
+configPassword: config
+
+# Custom openldap configuration files used to override default settings
+customLdifFiles:
+  06-proxy.ldif: |-
+    # Load ldap module
+    dn: cn=module{0},cn=config
+    changetype: modify
+    add: olcModuleLoad
+    olcModuleload: back_ldap
+
+    dn: olcDatabase={2}ldap,cn=config
+    changetype: add
+    objectClass: olcDatabaseConfig
+    objectClass: olcLDAPConfig
+    olcDatabase: {2}ldap
+    olcDbReadOnly: true
+    olcDbProtocolVersion: 3
+    #olcDbRebindAsUser: true
+    #olcDbChaseReferrals: false
+    #olcDbNoRefs: true
+    olcSuffix: dc=ad,dc=staging,dc=cloud,dc=sap
+    olcRootDN: dc=ad,dc=staging,dc=cloud,dc=sap
+    olcDbURI: "ldap://10.97.189.254:389"
+    olcDbIDAssertBind: bindmethod=simple binddn="CN=monsoon-service,CN=Users,DC=ad,DC=staging,DC=cloud,DC=sap" credentials="F40abK1avD4S!Gs"
+    olcDbIDAssertAuthzFrom: *
